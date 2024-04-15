@@ -1,0 +1,17 @@
+save_root: output
+batch_size: 32
+n_workers: 20
+seed: 42
+n_tta: 1
+gpu: 0
+use_amp: True
+dry_run: 
+
+mode: test
+version: test_set
+csv_path: <write path to the CSV that lists the sample information for the new_test_set>
+
+checkpoint:
+    - <write path to the 2nd_stage-fold_X-model_Y>
+    - <write path to the 2nd_stage-fold_X-model_Y>
+    - ...

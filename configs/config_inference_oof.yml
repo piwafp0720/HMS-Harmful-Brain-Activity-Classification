@@ -1,0 +1,22 @@
+save_root: output
+batch_size: 32
+n_workers: 20
+seed: 42
+n_tta: 1
+gpu: 0
+use_amp: True
+dry_run: 
+
+mode: pseudo_label
+version: oof/<write model_A or model_B or model_C>
+csv_path: 
+
+checkpoint:
+    - # fold_0
+        - <write path to the 2nd_stage-fold_0-model_Y>
+    - # fold_1
+        - <write path to the 2nd_stage-fold_1-model_Y>
+    - # fold_2
+        - <write path to the 2nd_stage-fold_2-model_Y>
+    - # fold_3
+        - <write path to the 2nd_stage-fold_3-model_Y>

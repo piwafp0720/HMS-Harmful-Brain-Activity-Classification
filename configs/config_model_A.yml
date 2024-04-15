@@ -1,0 +1,125 @@
+EPOCH: &EPOCH 10
+EVERY_N_EPOCHS: &EVERY_N_EPOCHS 1
+specs_path: data/generated/specs.npy
+
+gpu: 0
+seed: 42
+
+module_name: HMSModule
+datamodule_name: HMSDataModule
+dataset_name: &dataset_name HMSOffsetDataset
+augmentation_name: HMSAugmentations
+augmentation_ver: ver_2
+
+logger:
+  project: kaggle_hms
+  runName: baseline_model_A
+  mode: online
+
+datamodule:
+  dataset_name: *dataset_name
+  batch_size: 16
+  batch_size_val: -1
+  num_workers: 10
+  pin_memory: False
+
+checkpoint:
+  save_weights_only: True
+  save_top_k: 3
+  save_last: True
+  every_n_epochs: *EVERY_N_EPOCHS
+  monitor: val_metric
+  mode: min
+
+train:
+  epoch: *EPOCH
+  n_accumulations: 2
+  val_check_interval: 1.0
+  check_val_every_n_epoch: *EVERY_N_EPOCHS
+  amp: True
+  gradient_clip_val: 0.0
+  deterministic: False
+
+dataset:
+  csv_path: data/generated/fold/fold.csv
+  p_eeg_spec_root: data/generated/eeg_specs/offset
+  height: 128
+  width: 256
+  resize_h: 512
+  resize_w: 1536
+  n_channel: &N_CHANNEL 24
+  use_channel: [
+    "LL", "LP", "RP", "RR",
+    'Fp1-F7', 'F7-T3', 'T3-T5', 'T5-O1', 
+    'Fp1-F3', 'F3-C3', 'C3-P3', 'P3-O1', 
+    'Fp2-F8', 'F8-T4', 'T4-T6', 'T6-O2', 
+    'Fp2-F4', 'F4-C4', 'C4-P4', 'P4-O2',
+  ] 
+  use_only_kaggle_specs: False
+  use_only_eeg_specs: False
+  order: tile
+  group: 
+  label_smoothing_ver: ver_2
+  label_smoothing_k: 10
+  label_smoothing_epsilon: 0.1
+  label_smoothing_n_evaluator: 3
+  pseudo_label_n_evaluator: 2
+  p_fill_zero_some_channel: 0.0
+  p_swap_some_channel: 0.5
+  p_shift_time: 0.0
+  fill_zero_max_size: 1
+  swap_version: ver_5
+  shift_max_ratio: 8
+  resize_kaggle_spec: True
+  fold: 0
+  k_fold: 4
+  dry_run: 
+
+module:
+  last_n_epoch_refined_augment: 1
+  p_transform: 0.5
+  p_mix_augmentation: 0.5
+  mix_augmentation: []
+  mixup_alpha: 2.0
+  cutmix_alpha: 1.0
+  timemix_alpha: 1.0
+  ema_decay: 
+
+BACKBONE: &BACKBONE tf_efficientnet_b3_ns
+
+model:
+  name: HMS2DModel
+  args:
+    backbone: *BACKBONE
+    in_chans: 3
+    pretrained: True
+    pool_type: gem
+    n_hiddens: 256
+    n_classes: 6
+    drop_path_rate: 0.2
+    drop_rate_backbone: 0.1
+    drop_rate_fc: 0.2
+    manifold_mixup_alpha: 0.4
+  load_checkpoint: 
+  freeze_start:
+    target_epoch: 
+    unfreeze_params: 
+
+loss:
+  name: HMSLoss
+  args: 
+    ver: ver_1
+
+optimizer: 
+  name: AdamW
+  args:
+    lr: 1.e-3
+    weight_decay: 0
+  scheduler: 
+    name: CosineAnnealingLR
+    args:
+      eta_min: 1.e-6
+      last_epoch: -1
+      T_max: *EPOCH
+    lr_dict_param:
+      interval: step
